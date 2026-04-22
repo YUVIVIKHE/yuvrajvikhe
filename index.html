@@ -57,9 +57,81 @@
     color: var(--text);
     font-family: 'Space Grotesk', sans-serif;
     overflow-x: hidden;
-    cursor: crosshair;
+    cursor: none;
   }
-  button, a, [data-clickable] { cursor: pointer; }
+  button, a, [data-clickable] { cursor: none; }
+
+  /* ── CURSOR TRAIL ───────────────────────────────────────── */
+  #cursor-dot {
+    position: fixed; pointer-events: none; z-index: 99999;
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 10px var(--accent), 0 0 20px var(--accent);
+    transform: translate(-50%, -50%);
+    transition: transform 0.05s;
+  }
+  #cursor-ring {
+    position: fixed; pointer-events: none; z-index: 99998;
+    width: 32px; height: 32px; border-radius: 50%;
+    border: 1px solid rgba(0,212,255,0.5);
+    transform: translate(-50%, -50%);
+    transition: all 0.12s ease;
+  }
+  .cursor-particle {
+    position: fixed; pointer-events: none; z-index: 99997;
+    border-radius: 50%; transform: translate(-50%, -50%);
+    animation: particleFade 0.8s ease-out forwards;
+  }
+  @keyframes particleFade {
+    0%   { opacity: 0.8; transform: translate(-50%,-50%) scale(1); }
+    100% { opacity: 0; transform: translate(-50%,-50%) scale(0); }
+  }
+
+  /* ── SCROLL PROGRESS BAR ────────────────────────────────── */
+  #scroll-progress-bar {
+    position: fixed; top: 0; left: 0; height: 2px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2), var(--accent3));
+    z-index: 9999; width: 0%;
+    box-shadow: 0 0 8px var(--accent), 0 0 16px rgba(0,212,255,0.4);
+    transition: width 0.1s linear;
+  }
+
+  /* ── OPEN TO WORK BADGE ─────────────────────────────────── */
+  #otw-badge {
+    position: fixed; top: 72px; right: 28px;
+    z-index: 200;
+    display: flex; align-items: center; gap: 8px;
+    padding: 7px 14px;
+    background: rgba(0,255,136,0.07);
+    border: 1px solid rgba(0,255,136,0.3);
+    backdrop-filter: blur(10px);
+    font-family: 'Space Mono', monospace;
+    font-size: 9px; letter-spacing: .15em; text-transform: uppercase;
+    color: var(--accent4);
+    animation: otwFloat 4s ease-in-out infinite;
+    transition: all 0.3s;
+  }
+  #otw-badge:hover {
+    background: rgba(0,255,136,0.14);
+    border-color: var(--accent4);
+    box-shadow: 0 0 20px rgba(0,255,136,0.2);
+  }
+  .otw-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--accent4);
+    box-shadow: 0 0 8px var(--accent4);
+    animation: otwPulse 1.5s ease-in-out infinite;
+    flex-shrink: 0;
+  }
+  @keyframes otwPulse {
+    0%,100% { transform: scale(1); opacity: 1; }
+    50%     { transform: scale(1.5); opacity: 0.6; }
+  }
+  @keyframes otwFloat {
+    0%,100% { transform: translateY(0); }
+    50%     { transform: translateY(-4px); }
+  }
+  @media(max-width:768px) { #otw-badge { top:auto; bottom:80px; right:14px; } }
 
   /* ── SCROLLBAR ──────────────────────────────────────── */
   ::-webkit-scrollbar              { width:5px; }
@@ -724,6 +796,19 @@
 </head>
 <body>
 
+  <!-- Scroll Progress Bar -->
+  <div id="scroll-progress-bar"></div>
+
+  <!-- Custom Cursor -->
+  <div id="cursor-dot"></div>
+  <div id="cursor-ring"></div>
+
+  <!-- Open To Work Badge -->
+  <div id="otw-badge">
+    <span class="otw-dot"></span>
+    Open to Work
+  </div>
+
   <!-- Loading Screen -->
   <div id="loading-screen">
     <div class="loader-title">Initializing Universe</div>
@@ -1114,6 +1199,190 @@
         });
       });
     })();
+  </script>
+
+  <script>
+    // ── SCROLL PROGRESS BAR ──────────────────────────────────
+    const _bar = document.getElementById('scroll-progress-bar');
+    window.addEventListener('scroll', () => {
+      const s = document.documentElement;
+      const pct = (s.scrollTop / (s.scrollHeight - s.clientHeight)) * 100;
+      _bar.style.width = pct + '%';
+    }, { passive: true });
+
+    // ── CURSOR TRAIL ─────────────────────────────────────────
+    const _dot  = document.getElementById('cursor-dot');
+    const _ring = document.getElementById('cursor-ring');
+    let _mx = -100, _my = -100;
+    let _rx = -100, _ry = -100;
+    const COLORS = ['#00d4ff','#7b2fff','#ff6b35','#00ff88','#ffd700'];
+    let _lastParticle = 0;
+
+    document.addEventListener('mousemove', e => {
+      _mx = e.clientX; _my = e.clientY;
+      _dot.style.left = _mx + 'px';
+      _dot.style.top  = _my + 'px';
+
+      // Spawn particle every 40ms
+      const now = Date.now();
+      if (now - _lastParticle > 40) {
+        _lastParticle = now;
+        const p = document.createElement('div');
+        p.className = 'cursor-particle';
+        const size = 3 + Math.random() * 5;
+        const color = COLORS[Math.floor(Math.random() * COLORS.length)];
+        p.style.cssText = `
+          left:${_mx}px; top:${_my}px;
+          width:${size}px; height:${size}px;
+          background:${color};
+          box-shadow:0 0 ${size*2}px ${color};
+        `;
+        document.body.appendChild(p);
+        setTimeout(() => p.remove(), 800);
+      }
+    });
+
+    // Smooth ring follow
+    function animateRing() {
+      _rx += (_mx - _rx) * 0.14;
+      _ry += (_my - _ry) * 0.14;
+      _ring.style.left = _rx + 'px';
+      _ring.style.top  = _ry + 'px';
+      requestAnimationFrame(animateRing);
+    }
+    animateRing();
+
+    // Ring scale on hover over clickable elements
+    document.querySelectorAll('a, button, [data-clickable]').forEach(el => {
+      el.addEventListener('mouseenter', () => {
+        _ring.style.transform = 'translate(-50%,-50%) scale(1.8)';
+        _ring.style.borderColor = 'rgba(0,212,255,0.9)';
+        _dot.style.transform = 'translate(-50%,-50%) scale(0.4)';
+      });
+      el.addEventListener('mouseleave', () => {
+        _ring.style.transform = 'translate(-50%,-50%) scale(1)';
+        _ring.style.borderColor = 'rgba(0,212,255,0.5)';
+        _dot.style.transform = 'translate(-50%,-50%) scale(1)';
+      });
+    });
+
+    // Hide cursor when leaving window
+    document.addEventListener('mouseleave', () => {
+      _dot.style.opacity = '0'; _ring.style.opacity = '0';
+    });
+    document.addEventListener('mouseenter', () => {
+      _dot.style.opacity = '1'; _ring.style.opacity = '1';
+    });
+  </script>
+
+  <script>
+    // ── ASTRONAUT VOICE (Web Speech API TTS) ─────────────────
+    const ZONE_LINES = [
+      [ // zone 0 — hero
+        "Hello! Welcome to Yuvraj's universe of 28 projects!",
+        "Scroll down to explore the galaxy.",
+        "Click any glowing node to open a project.",
+        "Built with Three.js and pure passion."
+      ],
+      [ // zone 1 — AI
+        "Entering the AI and Machine Learning cluster.",
+        "RAG, LLMs, Computer Vision — all here!",
+        "94 percent accuracy on EEG disorder detection.",
+        "LangChain and LangGraph power these agents."
+      ],
+      [ // zone 2 — Research
+        "Research zone — quantum territory.",
+        "QEFFE uses fractal and quantum mathematics.",
+        "Currently interning at IIT BHU Varanasi."
+      ],
+      [ // zone 3 — Blockchain
+        "Blockchain cluster.",
+        "Built an ERP on Corda R3 — got published!",
+        "Immutable ledgers for college fee management."
+      ],
+      [ // zone 4 — IoT
+        "IoT and Robotics zone.",
+        "Won first prize at IIT Guwahati Micromouse competition!",
+        "Six degree of freedom robotic arm with gesture control.",
+        "Night surveillance robot with night vision camera."
+      ],
+      [ // zone 5 — Web
+        "Web and Software systems.",
+        "Ten plus full stack platforms shipped!",
+        "EdTech, ERP, HRMS, AgriTech — all live.",
+        "React, Node, Flutter, PHP — I use them all."
+      ],
+      [ // zone 6 — Platforms
+        "Platforms and Tools cluster.",
+        "Depex — a full hackathon judging system!",
+        "This is the flagship project — click it!"
+      ]
+    ];
+
+    let _lastZone  = -1;
+    let _lineIdx   = 0;
+    let _synth     = window.speechSynthesis;
+    let _voice     = null;
+    let _muted     = false;
+
+    // Pick best voice — prefer a male English voice
+    function loadVoice() {
+      const voices = _synth.getVoices();
+      _voice = voices.find(v => v.lang.startsWith('en') && v.name.toLowerCase().includes('male'))
+            || voices.find(v => v.lang === 'en-US')
+            || voices.find(v => v.lang.startsWith('en'))
+            || voices[0] || null;
+    }
+    loadVoice();
+    if (_synth.onvoiceschanged !== undefined) _synth.onvoiceschanged = loadVoice;
+
+    function astroSpeak(text) {
+      if (_muted || !_synth) return;
+      _synth.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.voice  = _voice;
+      u.rate   = 0.92;
+      u.pitch  = 0.88;
+      u.volume = 1.0;
+      _synth.speak(u);
+    }
+
+    // Zone change → speak first line of that zone
+    window.addEventListener('astroZoneChange', e => {
+      const zone = e.detail.zone;
+      if (zone === _lastZone) return;
+      _lastZone = zone;
+      _lineIdx  = 1;
+      astroSpeak(ZONE_LINES[zone]?.[0] || '');
+    });
+
+    // Cycle lines every 9s
+    setInterval(() => {
+      if (_synth.speaking || _lastZone < 0) return;
+      const lines = ZONE_LINES[_lastZone] || ZONE_LINES[0];
+      astroSpeak(lines[_lineIdx % lines.length]);
+      _lineIdx++;
+    }, 9000);
+
+    // Intro speech after astronaut lands
+    setTimeout(() => {
+      _lastZone = 0; _lineIdx = 1;
+      astroSpeak(ZONE_LINES[0][0]);
+    }, 4200);
+
+    // Click canvas → random line
+    document.getElementById('space-canvas')?.addEventListener('click', () => {
+      const lines = ZONE_LINES[Math.max(0, _lastZone)] || ZONE_LINES[0];
+      astroSpeak(lines[Math.floor(Math.random() * lines.length)]);
+    });
+
+    // Mute toggle button (M key)
+    document.addEventListener('keydown', e => {
+      if (e.key === 'm' || e.key === 'M') {
+        _muted = !_muted;
+        if (_muted) _synth.cancel();
+      }
+    });
   </script>
 
 </body>

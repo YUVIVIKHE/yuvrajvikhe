@@ -238,9 +238,10 @@ function init() {
   initStatCounters();
   buildMobileView();
 
-  // Hide loader
+  // Hide loader + start astronaut intro
   setTimeout(() => {
     document.getElementById('loading-screen').classList.add('hidden');
+    setTimeout(startAstronautIntro, 300);
   }, 1600);
 
   animate();
@@ -425,65 +426,246 @@ function createCluster(cluster, projects) {
 function createAvatar() {
   avatarGroup = new THREE.Group();
 
-  const whiteMat  = () => new THREE.MeshStandardMaterial({ color:0xe8eaf0, metalness:0.25, roughness:0.75 });
-  const greyMat   = () => new THREE.MeshStandardMaterial({ color:0xb0b4c4, metalness:0.5,  roughness:0.5  });
-  const visorMat  = new THREE.MeshStandardMaterial({
-    color:0x00d4ff, emissive:0x00d4ff, emissiveIntensity:2.0,
-    transparent:true, opacity:0.88, metalness:0.1, roughness:0.05
+  // ── MATERIALS ──────────────────────────────────────────────
+  const suitMat    = () => new THREE.MeshStandardMaterial({ color:0xdce8f0, metalness:0.35, roughness:0.55 });
+  const suitDarkMat= () => new THREE.MeshStandardMaterial({ color:0x8a9bb0, metalness:0.5,  roughness:0.45 });
+  const greyMat    = () => new THREE.MeshStandardMaterial({ color:0x6a7a90, metalness:0.6,  roughness:0.4  });
+  const darkMat    = () => new THREE.MeshStandardMaterial({ color:0x1a2535, metalness:0.7,  roughness:0.3  });
+  const goldMat    = () => new THREE.MeshStandardMaterial({ color:0xffd700, emissive:0xffa500, emissiveIntensity:0.4, metalness:0.9, roughness:0.1 });
+  const glowCyan   = () => new THREE.MeshStandardMaterial({ color:0x00d4ff, emissive:0x00d4ff, emissiveIntensity:2.5, metalness:0.1, roughness:0.05 });
+  const glowPurple = () => new THREE.MeshStandardMaterial({ color:0x7b2fff, emissive:0x7b2fff, emissiveIntensity:2.0, metalness:0.1, roughness:0.05 });
+  const visorMat   = new THREE.MeshStandardMaterial({
+    color:0x00d4ff, emissive:0x0088cc, emissiveIntensity:1.2,
+    transparent:true, opacity:0.82, metalness:0.05, roughness:0.0,
+    envMapIntensity: 1.5
+  });
+  const visorOuterMat = new THREE.MeshStandardMaterial({
+    color:0xffd700, emissive:0xffa500, emissiveIntensity:0.3,
+    metalness:0.95, roughness:0.05
   });
 
-  // Body
-  const bodyMesh = new THREE.Mesh(new THREE.CapsuleGeometry(0.30, 0.52, 4, 12), whiteMat());
-  avatarGroup.add(bodyMesh); // child index 0
+  // ── TORSO ──────────────────────────────────────────────────
+  const torso = new THREE.Mesh(new THREE.CapsuleGeometry(0.33, 0.48, 6, 16), suitMat());
+  torso.scale.set(1, 1, 0.88);
+  avatarGroup.add(torso);
 
-  // Head (child index 1)
-  const head = new THREE.Mesh(new THREE.SphereGeometry(0.27, 20, 20), whiteMat());
-  head.position.y = 0.58;
-  avatarGroup.add(head);
+  // Chest panel (dark inset)
+  const chestPanel = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.28, 0.05), darkMat());
+  chestPanel.position.set(0, 0.1, 0.28);
+  avatarGroup.add(chestPanel);
 
-  // Visor
+  // Chest panel glow strips
+  [0.08, -0.08].forEach(x => {
+    const strip = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.18, 0.02), glowCyan());
+    strip.position.set(x, 0.1, 0.31);
+    avatarGroup.add(strip);
+  });
+
+  // Center chest light
+  const chestLight = new THREE.Mesh(new THREE.CircleGeometry(0.055, 16), glowCyan());
+  chestLight.position.set(0, 0.06, 0.32);
+  avatarGroup.add(chestLight);
+  const chestPointLight = new THREE.PointLight(0x00d4ff, 1.5, 3);
+  chestPointLight.position.set(0, 0.06, 0.5);
+  avatarGroup.add(chestPointLight);
+
+  // Shoulder pads
+  [-0.38, 0.38].forEach((x, i) => {
+    const pad = new THREE.Mesh(new THREE.SphereGeometry(0.16, 12, 10), suitMat());
+    pad.scale.set(1, 0.75, 0.85);
+    pad.position.set(x, 0.28, 0);
+    avatarGroup.add(pad);
+    // Shoulder stripe
+    const stripe = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.08, 0.18), i === 0 ? glowPurple() : glowCyan());
+    stripe.position.set(x, 0.28, 0);
+    avatarGroup.add(stripe);
+  });
+
+  // Waist belt
+  const belt = new THREE.Mesh(new THREE.CylinderGeometry(0.34, 0.34, 0.07, 20), darkMat());
+  belt.position.set(0, -0.18, 0);
+  avatarGroup.add(belt);
+  // Belt buckle
+  const buckle = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.06, 0.06), goldMat());
+  buckle.position.set(0, -0.18, 0.32);
+  avatarGroup.add(buckle);
+
+  // ── HELMET ─────────────────────────────────────────────────
+  const helmetGroup = new THREE.Group();
+  helmetGroup.position.y = 0.62;
+  avatarGroup.add(helmetGroup);
+
+  // Helmet shell
+  const helmetShell = new THREE.Mesh(new THREE.SphereGeometry(0.30, 24, 20), suitMat());
+  helmetShell.scale.set(1, 1.05, 0.98);
+  helmetGroup.add(helmetShell);
+
+  // Helmet visor frame (gold ring)
+  const visorFrame = new THREE.Mesh(
+    new THREE.TorusGeometry(0.195, 0.025, 8, 40, Math.PI * 1.1),
+    visorOuterMat
+  );
+  visorFrame.position.set(0, 0.01, 0.08);
+  visorFrame.rotation.x = -Math.PI * 0.08;
+  helmetGroup.add(visorFrame);
+
+  // Visor glass
   const visor = new THREE.Mesh(
-    new THREE.SphereGeometry(0.18, 16, 8, 0, Math.PI * 2, 0, Math.PI * 0.52),
+    new THREE.SphereGeometry(0.21, 20, 12, 0, Math.PI * 2, 0.28, Math.PI * 0.48),
     visorMat
   );
-  visor.position.set(0, 0.59, 0.09);
-  visor.rotation.x = -Math.PI * 0.12;
-  avatarGroup.add(visor);
+  visor.position.set(0, 0.01, 0.06);
+  visor.rotation.x = -Math.PI * 0.08;
+  helmetGroup.add(visor);
 
-  // Backpack
-  const bp = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.42, 0.11), greyMat());
-  bp.position.set(0, 0.08, -0.29);
-  avatarGroup.add(bp);
-
-  // Arms — left = child index 4, right = child index 5
-  const armGeo = new THREE.CapsuleGeometry(0.085, 0.32, 4, 8);
-  [-0.40, 0.40].forEach((x, i) => {
-    const arm = new THREE.Mesh(armGeo, whiteMat());
-    arm.position.set(x, 0.08, 0);
-    arm.rotation.z = i === 0 ? 0.22 : -0.22;
-    avatarGroup.add(arm);
-  });
-
-  // Legs
-  const legGeo = new THREE.CapsuleGeometry(0.09, 0.28, 4, 8);
-  [-0.17, 0.17].forEach(x => {
-    const leg = new THREE.Mesh(legGeo, whiteMat());
-    leg.position.set(x, -0.62, 0);
-    avatarGroup.add(leg);
-  });
-
-  // Helmet antenna
-  const ant = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.22, 6), greyMat());
-  ant.position.set(0.1, 0.9, 0);
-  avatarGroup.add(ant);
-  const antTip = new THREE.Mesh(
-    new THREE.SphereGeometry(0.04, 8, 8),
-    new THREE.MeshStandardMaterial({ color:0x00d4ff, emissive:0x00d4ff, emissiveIntensity:3 })
+  // Visor inner glow
+  const visorGlow = new THREE.Mesh(
+    new THREE.SphereGeometry(0.19, 16, 10, 0, Math.PI * 2, 0.3, Math.PI * 0.44),
+    new THREE.MeshBasicMaterial({ color:0x00aaff, transparent:true, opacity:0.15 })
   );
-  antTip.position.set(0.1, 1.02, 0);
-  avatarGroup.add(antTip);
+  visorGlow.position.set(0, 0.01, 0.06);
+  visorGlow.rotation.x = -Math.PI * 0.08;
+  helmetGroup.add(visorGlow);
 
-  avatarGroup.scale.setScalar(0.68);
+  // Helmet side details
+  [-0.22, 0.22].forEach(x => {
+    const vent = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.04, 8), greyMat());
+    vent.rotation.z = Math.PI / 2;
+    vent.position.set(x, 0, 0.1);
+    helmetGroup.add(vent);
+  });
+
+  // Helmet top light
+  const topLight = new THREE.Mesh(new THREE.SphereGeometry(0.04, 8, 8), glowCyan());
+  topLight.position.set(0, 0.31, 0);
+  helmetGroup.add(topLight);
+
+  // Antenna
+  const ant = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.26, 6),
+    new THREE.MeshStandardMaterial({ color:0x8a9bb0, metalness:0.8, roughness:0.2 }));
+  ant.position.set(0.14, 0.38, 0);
+  helmetGroup.add(ant);
+  const antTip = new THREE.Mesh(new THREE.SphereGeometry(0.035, 8, 8), glowCyan());
+  antTip.position.set(0.14, 0.52, 0);
+  helmetGroup.add(antTip);
+  // Antenna glow light
+  const antLight = new THREE.PointLight(0x00d4ff, 1.2, 1.5);
+  antLight.position.set(0.14, 0.52, 0);
+  helmetGroup.add(antLight);
+
+  // ── ARMS ───────────────────────────────────────────────────
+  const armGeo = new THREE.CapsuleGeometry(0.095, 0.30, 6, 10);
+  [-0.44, 0.44].forEach((x, i) => {
+    const arm = new THREE.Mesh(armGeo, suitMat());
+    arm.position.set(x, 0.06, 0);
+    arm.rotation.z = i === 0 ? 0.28 : -0.28;
+    avatarGroup.add(arm);
+
+    // Elbow joint
+    const elbow = new THREE.Mesh(new THREE.SphereGeometry(0.1, 10, 8), suitDarkMat());
+    elbow.position.set(x * 1.08, -0.1, 0);
+    avatarGroup.add(elbow);
+
+    // Glove
+    const glove = new THREE.Mesh(new THREE.SphereGeometry(0.095, 10, 8), darkMat());
+    glove.scale.set(1, 0.85, 0.9);
+    glove.position.set(x * 1.14, -0.28, 0);
+    avatarGroup.add(glove);
+
+    // Wrist glow ring
+    const wristRing = new THREE.Mesh(
+      new THREE.TorusGeometry(0.1, 0.015, 6, 20),
+      i === 0 ? glowPurple() : glowCyan()
+    );
+    wristRing.position.set(x * 1.12, -0.22, 0);
+    wristRing.rotation.z = i === 0 ? 0.28 : -0.28;
+    avatarGroup.add(wristRing);
+  });
+
+  // ── LEGS ───────────────────────────────────────────────────
+  const legGeo = new THREE.CapsuleGeometry(0.105, 0.30, 6, 10);
+  [-0.18, 0.18].forEach((x, i) => {
+    const leg = new THREE.Mesh(legGeo, suitMat());
+    leg.position.set(x, -0.60, 0);
+    avatarGroup.add(leg);
+
+    // Knee pad
+    const knee = new THREE.Mesh(new THREE.SphereGeometry(0.115, 10, 8), suitDarkMat());
+    knee.scale.set(1.1, 0.7, 1);
+    knee.position.set(x, -0.68, 0.06);
+    avatarGroup.add(knee);
+
+    // Boot
+    const boot = new THREE.Mesh(new THREE.CapsuleGeometry(0.1, 0.14, 4, 8), darkMat());
+    boot.scale.set(1, 0.7, 1.2);
+    boot.position.set(x, -0.88, 0.04);
+    avatarGroup.add(boot);
+
+    // Boot glow strip
+    const bootStrip = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.03, 0.02), i === 0 ? glowPurple() : glowCyan());
+    bootStrip.position.set(x, -0.84, 0.12);
+    avatarGroup.add(bootStrip);
+  });
+
+  // ── JETPACK ────────────────────────────────────────────────
+  const jetpack = new THREE.Group();
+  jetpack.position.set(0, 0.05, -0.36);
+  avatarGroup.add(jetpack);
+
+  // Main body
+  const jpBody = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.50, 0.18), darkMat());
+  jetpack.add(jpBody);
+
+  // Side panels
+  [-0.22, 0.22].forEach(x => {
+    const panel = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.38, 0.14), greyMat());
+    panel.position.set(x, 0, 0);
+    jetpack.add(panel);
+  });
+
+  // Thruster nozzles (4x)
+  [[-0.12,-0.28],[ 0.12,-0.28],[-0.12,-0.18],[0.12,-0.18]].forEach(([x,y]) => {
+    const nozzle = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.055, 0.1, 8), greyMat());
+    nozzle.rotation.x = Math.PI / 2;
+    nozzle.position.set(x, y, -0.1);
+    jetpack.add(nozzle);
+
+    // Thruster glow
+    const flame = new THREE.Mesh(new THREE.ConeGeometry(0.04, 0.12, 8), new THREE.MeshBasicMaterial({
+      color:0x00d4ff, transparent:true, opacity:0.7
+    }));
+    flame.rotation.x = -Math.PI / 2;
+    flame.position.set(x, y, -0.22);
+    jetpack.add(flame);
+  });
+
+  // Jetpack top handle
+  const handle = new THREE.Mesh(new THREE.TorusGeometry(0.07, 0.018, 6, 16, Math.PI), greyMat());
+  handle.position.set(0, 0.28, 0);
+  handle.rotation.x = Math.PI / 2;
+  jetpack.add(handle);
+
+  // ── TETHER CABLE ───────────────────────────────────────────
+  const tetherPts = [];
+  for (let i = 0; i <= 20; i++) {
+    const t = i / 20;
+    tetherPts.push(new THREE.Vector3(
+      Math.sin(t * Math.PI * 1.5) * 0.4,
+      -0.3 - t * 1.2,
+      -0.1 + Math.cos(t * Math.PI) * 0.15
+    ));
+  }
+  const tetherGeo = new THREE.TubeGeometry(
+    new THREE.CatmullRomCurve3(tetherPts), 20, 0.012, 6, false
+  );
+  const tetherMesh = new THREE.Mesh(tetherGeo,
+    new THREE.MeshStandardMaterial({ color:0xffd700, emissive:0xffa500, emissiveIntensity:0.5, metalness:0.8, roughness:0.2 })
+  );
+  tetherMesh.position.set(0.2, 0, -0.1);
+  avatarGroup.add(tetherMesh);
+
+  // ── OVERALL SCALE & SCENE ──────────────────────────────────
+  avatarGroup.scale.setScalar(0.72);
   scene.add(avatarGroup);
 }
 
@@ -547,6 +729,9 @@ function updateZoneUI(progress) {
 
     // Background color shift
     document.getElementById('zone-bg').style.background = ZONE_BG_COLORS[zone] || '#020408';
+
+    // Fire zone change event for astronaut speech
+    window.dispatchEvent(new CustomEvent('astroZoneChange', { detail: { zone } }));
   }
 }
 
@@ -598,28 +783,88 @@ function animate() {
     node.mesh.rotation.x += delta * 0.09;
   });
 
-  // Avatar follows camera
+  // Avatar — intro sequence + normal follow
   if (avatarGroup) {
     const bob = Math.sin(elapsed * 1.9) * 0.1;
-    avatarGroup.position.set(
+
+    // Normal follow position (where astronaut rests after intro)
+    const normalPos = new THREE.Vector3(
       camera.position.x - 2.9,
       camera.position.y - 0.85 + bob,
       camera.position.z - 2.6
     );
-    avatarGroup.rotation.y  =  Math.sin(elapsed * 0.4) * 0.12 - 0.25;
-    avatarGroup.rotation.z  =  Math.sin(elapsed * 1.2) * 0.04;
-    avatarGroup.rotation.x  = -Math.sin(elapsed * 0.6) * 0.03;
 
-    // Point right arm toward nearest cluster
-    const nearCluster = CLUSTERS.reduce((best, c) => {
-      const d = Math.abs(c.z - camera.position.z);
-      return d < Math.abs(best.z - camera.position.z) ? c : best;
-    }, CLUSTERS[0]);
-    const dir = nearCluster.z < camera.position.z ? 1 : -1;
-    // child index 5 = right arm
-    const rightArm = avatarGroup.children[5];
-    if (rightArm) {
-      rightArm.rotation.z = THREE.MathUtils.lerp(rightArm.rotation.z, dir * -0.55, 0.04);
+    if (introPhase === 'flyIn') {
+      introTimer += delta;
+      const t = Math.min(introTimer / 2.2, 1); // 2.2s fly-in
+      const ease = 1 - Math.pow(1 - t, 4);     // ease-out-quart
+
+      // Fly from deep space toward normal position
+      avatarGroup.position.lerpVectors(
+        new THREE.Vector3(18, -8, camera.position.z - 60),
+        new THREE.Vector3(camera.position.x - 2.9, camera.position.y - 0.85, camera.position.z - 2.6),
+        ease
+      );
+      // Scale up from tiny to full
+      const s = 0.01 + ease * 0.71;
+      avatarGroup.scale.setScalar(s);
+      // Barrel roll + tumble during fly-in
+      avatarGroup.rotation.z = Math.PI * 1.5 * (1 - ease) + Math.sin(elapsed * 6) * (1 - ease) * 0.5;
+      avatarGroup.rotation.x = Math.sin(elapsed * 4) * (1 - ease) * 0.8;
+      avatarGroup.rotation.y = -Math.PI * 2 * (1 - ease) - 0.25;
+
+      if (t >= 1) { introPhase = 'orbit'; introTimer = 0; }
+
+    } else if (introPhase === 'orbit') {
+      introTimer += delta;
+      const t = Math.min(introTimer / 1.4, 1); // 1.4s orbit loop
+      const ease = t < 0.5 ? 2*t*t : -1+(4-2*t)*t; // ease-in-out
+
+      // Do a wide arc loop around the camera
+      const angle = ease * Math.PI * 2;
+      const radius = 3.5 * (1 - ease * 0.6);
+      avatarGroup.position.set(
+        camera.position.x + Math.sin(angle) * radius - 1.5,
+        camera.position.y + Math.sin(angle * 0.5) * 1.2 - 0.5,
+        camera.position.z - 2.0 - Math.cos(angle) * 1.5
+      );
+      avatarGroup.scale.setScalar(0.72);
+      avatarGroup.rotation.y = angle + Math.PI;
+      avatarGroup.rotation.z = Math.sin(angle * 2) * 0.3;
+      avatarGroup.rotation.x = Math.sin(angle) * 0.2;
+
+      if (t >= 1) { introPhase = 'settle'; introTimer = 0; }
+
+    } else if (introPhase === 'settle') {
+      introTimer += delta;
+      const t = Math.min(introTimer / 0.8, 1);
+      const ease = 1 - Math.pow(1 - t, 3);
+
+      // Smoothly settle into normal follow position
+      avatarGroup.position.lerp(normalPos, ease * 0.12);
+      avatarGroup.rotation.y = THREE.MathUtils.lerp(avatarGroup.rotation.y, -0.25, ease * 0.08);
+      avatarGroup.rotation.z = THREE.MathUtils.lerp(avatarGroup.rotation.z, 0, ease * 0.1);
+      avatarGroup.rotation.x = THREE.MathUtils.lerp(avatarGroup.rotation.x, 0, ease * 0.1);
+      avatarGroup.scale.setScalar(0.72);
+
+      if (t >= 1) { introPhase = 'done'; }
+
+    } else {
+      // Normal follow mode
+      avatarGroup.position.lerp(normalPos, 0.06);
+      avatarGroup.scale.setScalar(0.72);
+      avatarGroup.rotation.z = Math.sin(elapsed * 1.2) * 0.04;
+      avatarGroup.rotation.x = -Math.sin(elapsed * 0.6) * 0.03;
+
+      // Tilt toward nearest cluster
+      const nearCluster = CLUSTERS.reduce((best, c) => {
+        const d = Math.abs(c.z - camera.position.z);
+        return d < Math.abs(best.z - camera.position.z) ? c : best;
+      }, CLUSTERS[0]);
+      const dir = nearCluster.z < camera.position.z ? 1 : -1;
+      avatarGroup.rotation.y = THREE.MathUtils.lerp(
+        avatarGroup.rotation.y, dir * 0.18 - 0.25, 0.04
+      );
     }
   }
 
@@ -760,8 +1005,25 @@ window.openProjectModal = id => {
 };
 
 // ================================================================
-// ── CHATBOT
+// ── ASTRONAUT INTRO STATE
 // ================================================================
+
+let introPhase    = 'idle';   // 'idle' | 'flyIn' | 'orbit' | 'settle' | 'done'
+let introTimer    = 0;
+let introStartPos = new THREE.Vector3();
+let introTargetPos= new THREE.Vector3();
+
+function startAstronautIntro() {
+  if (!avatarGroup) return;
+  introPhase = 'flyIn';
+  introTimer = 0;
+  // Start far away deep in space, off to the side
+  avatarGroup.position.set(18, -8, camera.position.z - 60);
+  avatarGroup.rotation.set(0, 0, Math.PI * 1.5); // upside down tumbling
+  avatarGroup.scale.setScalar(0.01); // tiny — far away
+}
+
+
 
 const KB = {
   'eeg':           'EEG & ECG Disorder Prediction: Uses CNN + BiLSTM for neurological/cardiac disorder detection from biosignals. 94% accuracy.',
