@@ -166,6 +166,109 @@
     transition: opacity 0.8s ease, visibility 0.8s ease;
   }
   #loading-screen.hidden { opacity:0; visibility:hidden; pointer-events:none; }
+
+  /* ── ENTER UNIVERSE SCREEN ───────────────────────────── */
+  #enter-screen {
+    position: fixed; inset: 0;
+    background: var(--bg);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    z-index: 9999;
+    opacity: 0; visibility: hidden;
+    transition: opacity 0.6s ease, visibility 0.6s ease;
+  }
+  #enter-screen.visible { opacity: 1; visibility: visible; }
+  #enter-screen.exit {
+    opacity: 0; visibility: hidden;
+    pointer-events: none;
+  }
+  .enter-bg-glow {
+    position: absolute; inset: 0; pointer-events: none;
+    background:
+      radial-gradient(ellipse 60% 50% at 50% 50%, rgba(0,212,255,0.06) 0%, transparent 70%),
+      radial-gradient(ellipse 40% 40% at 30% 60%, rgba(123,47,255,0.05) 0%, transparent 60%);
+  }
+  .enter-stars {
+    position: absolute; inset: 0; pointer-events: none;
+    background-image:
+      radial-gradient(1px 1px at 20% 30%, rgba(255,255,255,0.6) 0%, transparent 100%),
+      radial-gradient(1px 1px at 80% 20%, rgba(255,255,255,0.5) 0%, transparent 100%),
+      radial-gradient(1px 1px at 60% 70%, rgba(255,255,255,0.4) 0%, transparent 100%),
+      radial-gradient(1px 1px at 40% 80%, rgba(255,255,255,0.5) 0%, transparent 100%),
+      radial-gradient(1px 1px at 10% 60%, rgba(255,255,255,0.3) 0%, transparent 100%),
+      radial-gradient(1px 1px at 90% 50%, rgba(255,255,255,0.4) 0%, transparent 100%),
+      radial-gradient(1px 1px at 50% 10%, rgba(255,255,255,0.6) 0%, transparent 100%),
+      radial-gradient(1px 1px at 70% 90%, rgba(255,255,255,0.3) 0%, transparent 100%);
+  }
+  .enter-tag {
+    font-family: 'Space Mono', monospace; font-size: 10px;
+    color: var(--accent); letter-spacing: .35em; text-transform: uppercase;
+    margin-bottom: 24px; opacity: 0.7;
+  }
+  .enter-name {
+    font-size: clamp(48px, 8vw, 100px); font-weight: 700;
+    line-height: 0.92; letter-spacing: -.03em;
+    text-align: center; margin-bottom: 14px;
+  }
+  .enter-name .e-first { color: var(--text); display: block; }
+  .enter-name .e-last {
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 55%, var(--accent3) 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text; display: block;
+  }
+  .enter-sub {
+    font-family: 'Space Mono', monospace; font-size: 11px;
+    color: var(--muted); letter-spacing: .08em; margin-bottom: 52px;
+    text-align: center;
+  }
+  #enter-btn {
+    position: relative; overflow: hidden;
+    padding: 16px 52px;
+    background: transparent;
+    border: 1px solid rgba(0,212,255,0.5);
+    color: var(--accent); font-weight: 700; font-size: 12px;
+    letter-spacing: .2em; text-transform: uppercase;
+    font-family: 'Space Mono', monospace;
+    cursor: none;
+    clip-path: polygon(0 0,calc(100% - 12px) 0,100% 12px,100% 100%,12px 100%,0 calc(100% - 12px));
+    transition: all 0.3s;
+    animation: enterPulse 2.5s ease-in-out infinite;
+  }
+  #enter-btn::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(135deg, rgba(0,212,255,0.12), rgba(123,47,255,0.12));
+    transform: translateX(-100%);
+    transition: transform 0.4s ease;
+  }
+  #enter-btn:hover::before { transform: translateX(0); }
+  #enter-btn:hover {
+    border-color: var(--accent);
+    box-shadow: 0 0 40px rgba(0,212,255,0.3), 0 0 80px rgba(0,212,255,0.1);
+    color: #fff;
+  }
+  .enter-btn-scan {
+    position: absolute; top: 0; left: -100%; width: 60%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(0,212,255,0.2), transparent);
+    animation: enterScan 2s ease-in-out infinite;
+  }
+  @keyframes enterScan { 0%{left:-60%} 100%{left:160%} }
+  @keyframes enterPulse {
+    0%,100% { box-shadow: 0 0 20px rgba(0,212,255,0.2); }
+    50%      { box-shadow: 0 0 40px rgba(0,212,255,0.5), 0 0 80px rgba(0,212,255,0.15); }
+  }
+  .enter-hint {
+    margin-top: 22px;
+    font-family: 'Space Mono', monospace; font-size: 9px;
+    color: var(--muted); letter-spacing: .15em; text-transform: uppercase;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .enter-hint-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--accent4);
+    box-shadow: 0 0 8px var(--accent4);
+    animation: blink 1.5s ease-in-out infinite;
+  }
   .loader-title {
     font-size:13px; font-family:'Space Mono',monospace;
     letter-spacing:.3em; color:var(--accent);
@@ -809,6 +912,26 @@
     Open to Work
   </div>
 
+  <!-- Enter Universe Screen (unlocks audio on click) -->
+  <div id="enter-screen">
+    <div class="enter-bg-glow"></div>
+    <div class="enter-stars"></div>
+    <div class="enter-tag">◈ Portfolio · 2025</div>
+    <div class="enter-name">
+      <span class="e-first">Yuvraj</span>
+      <span class="e-last">Vikhe</span>
+    </div>
+    <div class="enter-sub">AI Engineer · 28 Projects · 6 Galaxies</div>
+    <button id="enter-btn">
+      <span class="enter-btn-scan"></span>
+      ⋆ Enter Universe
+    </button>
+    <div class="enter-hint">
+      <span class="enter-hint-dot"></span>
+      Sound on · Best in Chrome
+    </div>
+  </div>
+
   <!-- Loading Screen -->
   <div id="loading-screen">
     <div class="loader-title">Initializing Universe</div>
@@ -1131,6 +1254,16 @@
 
   <!-- ── AI CHATBOT ─────────────────────────────────────────── -->
   <button id="chatbot-btn" title="Ask about projects">🤖</button>
+
+  <!-- Sound Toggle -->
+  <button id="sound-toggle" title="Mute astronaut" style="
+    position:fixed; bottom:92px; right:28px; z-index:400;
+    width:40px; height:40px; border-radius:50%;
+    background:rgba(0,212,255,0.1); border:1px solid rgba(0,212,255,0.3);
+    color:#e8eaf0; font-size:16px; cursor:none;
+    display:flex; align-items:center; justify-content:center;
+    transition:all 0.3s; backdrop-filter:blur(8px);
+  ">🔊</button>
   <div id="chatbot-panel">
     <div class="chat-header">
       <div class="chat-header-title">
@@ -1276,113 +1409,140 @@
   </script>
 
   <script>
-    // ── ASTRONAUT VOICE (Web Speech API TTS) ─────────────────
-    const ZONE_LINES = [
-      [ // zone 0 — hero
-        "Hello! Welcome to Yuvraj's universe of 28 projects!",
-        "Scroll down to explore the galaxy.",
-        "Click any glowing node to open a project.",
-        "Built with Three.js and pure passion."
-      ],
-      [ // zone 1 — AI
-        "Entering the AI and Machine Learning cluster.",
-        "RAG, LLMs, Computer Vision — all here!",
-        "94 percent accuracy on EEG disorder detection.",
-        "LangChain and LangGraph power these agents."
-      ],
-      [ // zone 2 — Research
-        "Research zone — quantum territory.",
-        "QEFFE uses fractal and quantum mathematics.",
-        "Currently interning at IIT BHU Varanasi."
-      ],
-      [ // zone 3 — Blockchain
-        "Blockchain cluster.",
-        "Built an ERP on Corda R3 — got published!",
-        "Immutable ledgers for college fee management."
-      ],
-      [ // zone 4 — IoT
-        "IoT and Robotics zone.",
-        "Won first prize at IIT Guwahati Micromouse competition!",
-        "Six degree of freedom robotic arm with gesture control.",
-        "Night surveillance robot with night vision camera."
-      ],
-      [ // zone 5 — Web
-        "Web and Software systems.",
-        "Ten plus full stack platforms shipped!",
-        "EdTech, ERP, HRMS, AgriTech — all live.",
-        "React, Node, Flutter, PHP — I use them all."
-      ],
-      [ // zone 6 — Platforms
-        "Platforms and Tools cluster.",
-        "Depex — a full hackathon judging system!",
-        "This is the flagship project — click it!"
-      ]
-    ];
+  // ── ASTRONAUT VOICE ───────────────────────────────────────
+  const ZONE_SCRIPTS = {
+    0: ["Hey there. Welcome to Yuvraj's interactive universe. I'm your guide through 28 projects built across AI, robotics, blockchain, and the web. Go ahead and scroll down to fly through the galaxy. When you see a glowing node, click it to explore that project."],
+    1: ["You've just entered the AI and Machine Learning cluster. This is where Yuvraj builds intelligent systems — RAG pipelines, LLM agents, and computer vision. One project detects neurological disorders from EEG signals with 94 percent accuracy. Another catches hallucinations in large language model outputs in real time."],
+    2: ["Welcome to the Research zone. Yuvraj is currently a research intern at IIT BHU Varanasi, working on biomedical signal analysis. He also designed QEFFE — a quantum-inspired algorithm that applies fractal mathematics to feature extraction."],
+    3: ["This is the Blockchain cluster. Yuvraj built a full enterprise ERP system on Corda R3 for transparent college fee management, and the work was published as a research paper."],
+    4: ["Entering IoT and Robotics. Yuvraj won first prize at the IIT Guwahati Micromouse competition with a fully autonomous maze-solving robot. He also built a six degree of freedom robotic arm with gesture recognition and a real-time web dashboard."],
+    5: ["This is the Web and Software systems cluster. Over ten full-stack platforms are live in production — EdTech, ERP, HRMS, AgriTech, water delivery, and gig economy apps. React, Node, Flutter, PHP, Angular — Yuvraj works across the full stack."],
+    6: ["You've reached the Platforms and Tools cluster. The flagship project here is a robotic arm control system with a Three.js 3D dashboard and computer vision gesture recognition. Click the golden node to see it."]
+  };
 
-    let _lastZone  = -1;
-    let _lineIdx   = 0;
-    let _synth     = window.speechSynthesis;
-    let _voice     = null;
-    let _muted     = false;
+  const synth   = window.speechSynthesis;
+  let voice     = null;
+  let lastZone  = -1;
+  let muted     = false;
+  let unlocked  = false;
+  let pendingScript = null;
 
-    // Pick best voice — prefer a male English voice
-    function loadVoice() {
-      const voices = _synth.getVoices();
-      _voice = voices.find(v => v.lang.startsWith('en') && v.name.toLowerCase().includes('male'))
-            || voices.find(v => v.lang === 'en-US')
-            || voices.find(v => v.lang.startsWith('en'))
-            || voices[0] || null;
+  // ── Pick best voice ───────────────────────────────────────
+  function pickVoice() {
+    const all = synth.getVoices();
+    voice =
+      all.find(v => v.name === 'Google US English') ||
+      all.find(v => v.name.includes('Google') && v.lang === 'en-US') ||
+      all.find(v => /Microsoft.*Guy/i.test(v.name) && v.lang === 'en-US') ||
+      all.find(v => /Microsoft.*David/i.test(v.name)) ||
+      all.find(v => v.lang === 'en-US') ||
+      all.find(v => v.lang.startsWith('en')) ||
+      all[0] || null;
+  }
+  pickVoice();
+  if (speechSynthesis.onvoiceschanged !== undefined)
+    speechSynthesis.onvoiceschanged = pickVoice;
+
+  // ── Speak one long natural sentence ──────────────────────
+  function speakNow(text) {
+    if (muted || !text) return;
+    synth.cancel();
+    const u   = new SpeechSynthesisUtterance(text);
+    u.voice   = voice;
+    u.rate    = 0.90;
+    u.pitch   = 0.95;
+    u.volume  = 1.0;
+    u.lang    = 'en-US';
+    synth.speak(u);
+  }
+
+  // ── Unlock on first user gesture then speak ───────────────
+  function unlock(script) {
+    if (!unlocked) {
+      // Speak a silent utterance to unlock audio context
+      const silent = new SpeechSynthesisUtterance(' ');
+      silent.volume = 0;
+      silent.onend  = () => { unlocked = true; if (script) speakNow(script); };
+      synth.speak(silent);
+    } else {
+      speakNow(script);
     }
-    loadVoice();
-    if (_synth.onvoiceschanged !== undefined) _synth.onvoiceschanged = loadVoice;
+  }
 
-    function astroSpeak(text) {
-      if (_muted || !_synth) return;
-      _synth.cancel();
-      const u = new SpeechSynthesisUtterance(text);
-      u.voice  = _voice;
-      u.rate   = 0.92;
-      u.pitch  = 0.88;
-      u.volume = 1.0;
-      _synth.speak(u);
-    }
+  // ── Zone change ───────────────────────────────────────────
+  window.addEventListener('astroZoneChange', e => {
+    const z = e.detail.zone;
+    if (z === lastZone) return;
+    lastZone = z;
+    const s  = ZONE_SCRIPTS[z]?.[0];
+    if (!s) return;
+    unlocked ? speakNow(s) : (pendingScript = s);
+  });
 
-    // Zone change → speak first line of that zone
-    window.addEventListener('astroZoneChange', e => {
-      const zone = e.detail.zone;
-      if (zone === _lastZone) return;
-      _lastZone = zone;
-      _lineIdx  = 1;
-      astroSpeak(ZONE_LINES[zone]?.[0] || '');
+  // ── First interaction unlocks audio ──────────────────────
+  function onFirstInteraction() {
+    if (unlocked) return;
+    unlocked = true;
+    const script = pendingScript || ZONE_SCRIPTS[0][0];
+    speakNow(script);
+    pendingScript = null;
+  }
+  ['click','scroll','keydown','touchstart'].forEach(ev =>
+    window.addEventListener(ev, onFirstInteraction, { once: true, passive: true })
+  );
+
+  // ── Enter button — dismiss screen + unlock audio ──────────
+  const enterBtn = document.getElementById('enter-btn');
+  if (enterBtn) {
+    enterBtn.addEventListener('click', () => {
+      const screen = document.getElementById('enter-screen');
+      if (screen) screen.classList.add('exit');
+      // Unlock audio and start astronaut intro
+      unlocked = true;
+      setTimeout(() => {
+        if (typeof startAstronautIntro === 'function') startAstronautIntro();
+      }, 300);
+      setTimeout(() => {
+        lastZone = 0;
+        speakNow(ZONE_SCRIPTS[0][0]);
+        pendingScript = null;
+      }, 4400);
     });
+  }
 
-    // Cycle lines every 9s
-    setInterval(() => {
-      if (_synth.speaking || _lastZone < 0) return;
-      const lines = ZONE_LINES[_lastZone] || ZONE_LINES[0];
-      astroSpeak(lines[_lineIdx % lines.length]);
-      _lineIdx++;
-    }, 9000);
+  // ── Intro queued for after astronaut lands ────────────────
+  setTimeout(() => {
+    lastZone = 0;
+    pendingScript = ZONE_SCRIPTS[0][0];
+    if (unlocked) { speakNow(pendingScript); pendingScript = null; }
+  }, 4400);
 
-    // Intro speech after astronaut lands
-    setTimeout(() => {
-      _lastZone = 0; _lineIdx = 1;
-      astroSpeak(ZONE_LINES[0][0]);
-    }, 4200);
+  // ── Click canvas → replay current zone ───────────────────
+  document.getElementById('space-canvas')?.addEventListener('click', () => {
+    const s = ZONE_SCRIPTS[Math.max(0, lastZone)]?.[0];
+    if (s) unlock(s);
+  });
 
-    // Click canvas → random line
-    document.getElementById('space-canvas')?.addEventListener('click', () => {
-      const lines = ZONE_LINES[Math.max(0, _lastZone)] || ZONE_LINES[0];
-      astroSpeak(lines[Math.floor(Math.random() * lines.length)]);
+  // ── Sound toggle button ───────────────────────────────────
+  const soundBtn = document.getElementById('sound-toggle');
+  if (soundBtn) {
+    soundBtn.addEventListener('click', () => {
+      muted = !muted;
+      soundBtn.textContent = muted ? '🔇' : '🔊';
+      soundBtn.title = muted ? 'Unmute astronaut' : 'Mute astronaut';
+      if (muted) synth.cancel();
+      else unlock(ZONE_SCRIPTS[Math.max(0, lastZone)]?.[0]);
     });
+  }
 
-    // Mute toggle button (M key)
-    document.addEventListener('keydown', e => {
-      if (e.key === 'm' || e.key === 'M') {
-        _muted = !_muted;
-        if (_muted) _synth.cancel();
-      }
-    });
+  // ── M key mute ────────────────────────────────────────────
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'm' && e.key !== 'M') return;
+    muted = !muted;
+    if (soundBtn) { soundBtn.textContent = muted ? '🔇' : '🔊'; }
+    if (muted) synth.cancel();
+    else unlock(ZONE_SCRIPTS[Math.max(0, lastZone)]?.[0]);
+  });
   </script>
 
 </body>

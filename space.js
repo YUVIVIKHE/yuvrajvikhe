@@ -238,10 +238,11 @@ function init() {
   initStatCounters();
   buildMobileView();
 
-  // Hide loader + start astronaut intro
+  // Hide loader → show Enter screen
   setTimeout(() => {
     document.getElementById('loading-screen').classList.add('hidden');
-    setTimeout(startAstronautIntro, 300);
+    const enterScreen = document.getElementById('enter-screen');
+    if (enterScreen) enterScreen.classList.add('visible');
   }, 1600);
 
   animate();
