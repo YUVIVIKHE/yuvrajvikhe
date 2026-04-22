@@ -91,7 +91,7 @@ const PROJECTS = [
   { id:16, cluster:'web',        flagship:false, icon:'🌐', name:'KMA Web Platform',
     desc:'Full-stack web platform for KMA organization with member management, event coordination, dynamic content management, role-based access control, and real-time notifications.',
     tech:['React','PHP','MySQL','Bootstrap','REST API','AWS','JavaScript'],
-    github:'https://github.com/YUVIVIKHE', live:null },
+    github:'https://github.com/YUVIVIKHE', live:'https://kmassociates.in' },
   { id:17, cluster:'web',        flagship:false, icon:'💼', name:'Strandforse Web App',
     desc:'Corporate web application with advanced multi-role user management, real-time socket.io notifications, an integrated analytics dashboard, and automated reporting system.',
     tech:['Angular','Node.js','MongoDB','Express','Socket.io','AWS EC2','TypeScript'],
@@ -107,15 +107,15 @@ const PROJECTS = [
   { id:20, cluster:'web',        flagship:false, icon:'📊', name:'KMA ERP',
     desc:'Enterprise Resource Planning system for KMA with integrated modules for finance, operations, HR, inventory, and executive reporting with role-based access and audit logging.',
     tech:['React','Node.js','PostgreSQL','Docker','Redis','AWS','TypeScript'],
-    github:'https://github.com/YUVIVIKHE', live:null },
+    github:'https://github.com/YUVIVIKHE', live:'https://erp.kmassociates.in' },
   { id:21, cluster:'web',        flagship:false, icon:'🌾', name:'Sky Agro Inventory',
     desc:'Agricultural inventory management system for tracking crops, managing supplier relationships, setting stock alerts, and visualizing seasonal analytics for smarter procurement decisions.',
     tech:['PHP','MySQL','JavaScript','Chart.js','Bootstrap','REST API','AJAX'],
-    github:'https://github.com/YUVIVIKHE', live:null },
+    github:'https://github.com/YUVIVIKHE', live:'https://skyagro.org' },
   { id:22, cluster:'web',        flagship:false, icon:'📚', name:'Gyanam India Learning Platform',
     desc:'Full-featured EdTech platform with course management, adaptive video streaming, interactive quizzes, progress visualization, instructor dashboards, and Razorpay payment integration.',
     tech:['React','Node.js','MongoDB','AWS S3','Razorpay','Socket.io','FFmpeg'],
-    github:'https://github.com/YUVIVIKHE', live:null },
+    github:'https://github.com/YUVIVIKHE', live:'https://gyanamindia.labxco.in' },
   { id:23, cluster:'web',        flagship:false, icon:'📝', name:'Gyanam India Exam System',
     desc:'Secure online examination platform with AI-assisted proctoring, anti-cheating measures (tab-switch detection, webcam monitoring), real-time scoring, and AI-powered result analytics.',
     tech:['React','Node.js','MongoDB','WebRTC','JWT','Redis','TensorFlow.js'],
@@ -123,11 +123,11 @@ const PROJECTS = [
   { id:24, cluster:'web',        flagship:false, icon:'💧', name:'Swara Aqua System',
     desc:'Smart water delivery platform with route optimization, subscription management, live delivery tracking on Google Maps, IoT-connected water quality sensors, and payment gateway.',
     tech:['React Native','Node.js','MySQL','Google Maps API','Firebase','Express','Stripe'],
-    github:'https://github.com/YUVIVIKHE', live:null },
+    github:'https://github.com/YUVIVIKHE', live:'https://swaraaqua.labxco.in' },
   { id:25, cluster:'web',        flagship:false, icon:'🔨', name:'Labour Link App',
     desc:'Gig economy platform connecting daily-wage laborers with local employers. Features AI-driven skill matching, geo-location job discovery, in-app chat, and UPI payment integration.',
     tech:['Flutter','Firebase','Google Maps','Razorpay','Node.js','MongoDB','Dart'],
-    github:'https://github.com/YUVIVIKHE', live:null },
+    github:'https://github.com/YUVIVIKHE', live:'https://labourlink.labxco.cloud' },
   { id:26, cluster:'web',        flagship:false, icon:'🩸', name:'Blood Donation System',
     desc:'Life-saving platform connecting blood donors with recipients in need. Features ABO-compatible matching, emergency broadcast alerts, blood camp management, and donor history.',
     tech:['PHP','MySQL','JavaScript','Twilio SMS','Google Maps','Bootstrap','REST API'],
@@ -707,7 +707,7 @@ function openModal(project, cluster) {
   badge.style.borderColor  = cluster.hex;
   badge.style.background   = cluster.hex + '18';
 
-  document.getElementById('modal-tags').innerHTML    =
+  document.getElementById('modal-tags').innerHTML =
     project.tech.map(t => `<span class="modal-tag">${t}</span>`).join('');
 
   document.getElementById('modal-actions').innerHTML = `
@@ -715,6 +715,31 @@ function openModal(project, cluster) {
     ${project.live ? `<a href="${project.live}" target="_blank" class="modal-btn modal-btn-secondary">↗ Live Demo</a>` : ''}
     ${project.flagship ? '<span class="flagship-badge">★ Flagship Project</span>' : ''}
   `;
+
+  // Live preview embed
+  const existingPreview = document.getElementById('modal-live-preview');
+  if (existingPreview) existingPreview.remove();
+
+  if (project.live) {
+    const divider = document.createElement('div');
+    divider.className = 'modal-divider';
+
+    const wrap = document.createElement('div');
+    wrap.id = 'modal-live-preview';
+    wrap.innerHTML = `
+      <div class="modal-preview-label">◈ Live Preview</div>
+      <div class="modal-preview-wrap">
+        <iframe src="${project.live}" loading="lazy" title="${project.name} preview" sandbox="allow-scripts allow-same-origin allow-forms"></iframe>
+        <div class="modal-preview-overlay" onclick="window.open('${project.live}','_blank')">
+          <a href="${project.live}" target="_blank" class="modal-preview-open-btn">↗ Open Live Site</a>
+        </div>
+      </div>
+    `;
+
+    const panel = document.querySelector('.modal-panel');
+    panel.appendChild(divider);
+    panel.appendChild(wrap);
+  }
 
   modal.classList.add('open');
 }

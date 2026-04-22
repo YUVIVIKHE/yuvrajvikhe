@@ -616,6 +616,40 @@
   .modal-btn-primary:hover { transform:translateY(-2px); box-shadow:0 10px 28px rgba(0,212,255,0.3); }
   .modal-btn-secondary { background:transparent; color:var(--muted); border:1px solid var(--border); }
   .modal-btn-secondary:hover { border-color:var(--accent); color:var(--accent); }
+
+  /* ── LIVE PREVIEW EMBED ──────────────────────────────── */
+  .modal-preview-wrap {
+    margin-top: 20px;
+    border: 1px solid var(--border);
+    position: relative; overflow: hidden;
+    height: 220px;
+  }
+  .modal-preview-wrap iframe {
+    width: 100%; height: 100%; border: none;
+    transform: scale(0.75); transform-origin: top left;
+    width: 133%; height: 133%;
+    pointer-events: none;
+  }
+  .modal-preview-label {
+    font-family: 'Space Mono', monospace; font-size: 9px;
+    color: var(--accent); letter-spacing: .2em; text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .modal-preview-overlay {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(2,4,8,0.55);
+    cursor: pointer; transition: background 0.3s;
+  }
+  .modal-preview-overlay:hover { background: rgba(2,4,8,0.2); }
+  .modal-preview-open-btn {
+    padding: 8px 20px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #000; font-weight: 700; font-size: 10px;
+    font-family: 'Space Mono', monospace; letter-spacing: .1em;
+    text-transform: uppercase; border: none; cursor: pointer;
+    text-decoration: none; display: inline-flex; align-items: center; gap: 6px;
+  }
   .flagship-badge { display:inline-flex; align-items:center; gap:6px; padding:4px 12px; background:linear-gradient(135deg,rgba(255,215,0,0.15),rgba(255,107,53,0.15)); border:1px solid rgba(255,215,0,0.4); color:#ffd700; font-size:9px; font-family:'Space Mono',monospace; letter-spacing:.15em; text-transform:uppercase; margin-left:10px; }
 
   /* ── CHATBOT ──────────────────────────────────────────── */
